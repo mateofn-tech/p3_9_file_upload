@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pincel de imágenes con Guardado G</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #222;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    #canvasWrapper {
+      margin-top: 20px;
+    }
+    input, label {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    p {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pincel de imágenes con Guardado G</h1>
+  <p>Presiona la tecla <strong>X</strong> para cambiar el fondo sin borrar lo pintado</p>
+  <p>Presiona la tecla <strong>G</strong> para guardar el canvas como PNG</p>
+  <input type="file" id="imageUpload" accept="image/*">
+  <label>
+    Tamaño del pincel:
+    <input type="range" id="brushSize" min="10" max="100" value="50">
+  </label>
+  <div id="canvasWrapper"></div>
+
+  <script>
+    let img;
+    let brushEnabled = false;
+    let brushSize = 50;
+    let bgColors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93'];
+    let currentBgIndex = 0;
+
+    let drawingLayer;
+
+    function setup() {
+      let canvas = createCanvas(600, 400);
+      canvas.parent("canvasWrapper");
+
+      // Capa para pincel
+      drawingLayer = createGraphics(width, height);
+      drawingLayer.clear();
+
+      background(bgColors[currentBgIndex]);
+
+      document.getElementById("imageUpload").addEventListener("change", handleImageUpload);
+      document.getElementById("brushSize").addEventListener("input", (e) => brushSize = e.target.value);
+    }
+
+    function handleImageUpload(event) {
+      let file = event.target.files[0];
+      if (file) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+          img = loadImage(e.target.result, () => brushEnabled = true);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function draw() {
+      // Dibujar fondo
+      background(bgColors[currentBgIndex]);
+      // Dibujar pinceladas acumuladas
+      image(drawingLayer, 0, 0);
+
+      // Dibujar en layer solo si se presiona clic
+      if (brushEnabled && img && mouseIsPressed) {
+        drawingLayer.image(img, mouseX - brushSize / 2, mouseY - brushSize / 2, brushSize, brushSize);
+      }
+    }
+
+    function keyPressed() {
+      if (key.toLowerCase() === 'x') {
+        currentBgIndex = (currentBgIndex + 1) % bgColors.length;
+      } else if (key.toLowerCase() === 'g') {
+        // Guardar el canvas principal
+        saveCanvas('miLienzo', 'png');
+      }
+    }
+  </script>
+</body>
+</html>
